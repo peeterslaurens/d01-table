@@ -14,7 +14,7 @@ var plugins = require('gulp-load-plugins')({
      */
     gulp.task('templateCache', function() {
         return gulp.src(devRoot+'/**/*.html')
-            .pipe(plugins.angularTemplatecache())
+            .pipe(plugins.angularTemplatecache({module:'d01-table'}))
             .pipe(gulp.dest(devRoot));
     });
 
