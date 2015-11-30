@@ -1,0 +1,23 @@
+<div class="clearfix">
+    <input type="text" ng-model="tablestatus.query" ng-if="tableconfig.searchField" placeholder="{{tableconfig.placeholder}}" ng-class="tableconfig.select.options ? 'col-9 first':'col-12'">
+    <select ng-if="tableconfig.select.options" class="col-3 last" ng-model="tablestatus.select" ng-options="option.value as option.name for option in tableconfig.select.options">
+    </select>
+</div>
+<table class="{{tableconfig.className}}">
+    <thead>
+        <th ng-repeat="col in tableconfig.columns" ng-click="clickHeader(col)" ng-class="{ 'sortable': col.sortable}" class="{{'field_'+col.key + ' '+ col.className}}">{{col.columnName}} <i ng-if="col.sortable" class="fa" ng-class="{
+            'fa-angle-up': tablestatus.sorting.column==col.key,
+            'fa-flip-vertical': tablestatus.sorting.direction == '-' && tablestatus.sorting.column==col.key
+        }"></i></th>
+    </thead>
+    <tbody>
+        <tr ng-repeat="i in tablesource|filter:tablestatus.query|filter:tablestatus.select|orderBy:tablestatus.sorting.direction+tablestatus.sorting.column|slice:getStartItem():getEnditem()" ng-class-odd="'odd'" ng-class-even="'even'" class="{{(rowIdentifier) ? 'row_'+i[rowIdentifier] : ''}}">
+            <td d01-td ng-repeat="col in tableconfig.columns" source="i" config="col"></td d01-td>
+        </tr>
+    </tbody>
+</table>
+<ul class="pagination" ng-if="tablestatus.pages != 1">
+    <li ng-repeat="page in pages() track by $index">
+        <a ng-class="{'active': $index == tablestatus.activePage}" ng-click="setPage($index)">{{$index + 1}}</a>
+    </li>
+</ul>

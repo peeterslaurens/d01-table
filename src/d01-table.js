@@ -1,0 +1,144 @@
+(function (angular) {
+    var d01Table = angular.module('d01-table', []);
+
+    d01Table
+        .directive('d01Table', [
+            '$parse',
+            function($parse) {
+                return {
+
+                    templateUrl: 'table.html',
+                    restrict: 'AE',
+                    scope: true,
+                    link: function($scope, $el, attr) {
+
+                        $scope.tablestatus = {
+                            query: '',
+                            select: '',
+                            pages: 0,
+                            activePage: 0,
+                            itemsPerPage: 0,
+                            sorting: {
+                                direction: '-',
+                                column: ''
+                            }
+                        };
+
+                        $scope.clickHeader = function clickHeader(col) {
+                            if (col.sortable) {
+                                var sort = $scope.tablestatus.sorting;
+                                if (sort.column === col.key) {
+                                    sort.direction = (sort.direction === '-') ? '+' : '-';
+                                } else {
+                                    sort.column = col.key;
+                                    sort.direction = '+';
+                                }
+                            }
+                        };
+
+
+                        //PAGINATION
+                        $scope.pages = function pages() {
+                            return new Array($scope.tablestatus.pages);
+                        };
+
+                        $scope.setPage = function setPage(page) {
+                            $scope.tablestatus.activePage = page;
+                        }
+
+                        $scope.getStartItem = function getStartItem() {
+                            return $scope.tablestatus.itemsPerPage * $scope.tablestatus.activePage;
+                        }
+
+                        $scope.getEnditem = function getEnditem() {
+                            return $scope.getStartItem() + $scope.tablestatus.itemsPerPage;
+                        }
+
+                        var initializePagination = function initializePagination () {
+                            $scope.tablestatus.itemsPerPage = $scope.tableconfig.itemsPerPage;
+                            $scope.tablestatus.pages = Math.ceil($scope.tablesource.length / $scope.tableconfig.itemsPerPage);
+                        };
+
+                        var initialize = function initialize() {
+                            $scope.tablesource = $scope.$parent.$eval(attr.source);
+                            $scope.tableconfig = $scope.$parent.$eval(attr.config);
+                            $scope.rowIdentifier = attr.rowIdentifier;
+                            //set the default sorting
+                            _.forEach($scope.tableconfig.columns, function(column) {
+                                if (column.defaultsort) {
+                                    $scope.tablestatus.sorting.column = column.key;
+                                }
+                            });
+
+                            initializePagination();
+                        }
+
+                        $scope.$on('setTablePage', function (config, p) {
+                            $scope.setPage(parseInt(p));
+                        });
+
+                        $scope.$watch('tablesource.length', function (nv, ov) {
+                            initializePagination();
+                        });
+
+                        initialize();
+                    }
+                };
+            }
+        ])
+
+        .directive('d01Td', [
+            '$compile',
+            function($compile) {
+                return {
+
+                    templateUrl: 'td.html',
+                    restrict: 'A',
+                    scope: false,
+                    transclude: true,
+                    replace: true,
+                    link: function($scope, $el, attr) {
+                        var col = $scope.$eval(attr.config),
+                            item = $scope.$eval(attr.source),
+                            byString = function(o, s) {
+                                s = s.replace(/\[(\w+)\]/g, '.$1');
+                                s = s.replace(/^\./, '');
+                                var a = s.split('.');
+                                for (var i = 0, n = a.length; i < n; ++i) {
+                                    var k = a[i];
+                                    if (k in o) {
+                                        o = o[k];
+                                    } else {
+                                        return;
+                                    }
+                                }
+                                return o;
+                            };
+
+                        if (col.template) {
+                            $el.append(col.template);
+                        } else if (col.mode) {
+                            switch(col.mode) {
+                                case 'date':
+                                    if (moment) {
+                                        $el.append(moment(byString(item, col.key)).format(col.dateFormat || 'DD/MM/YY'));
+                                    } else {
+                                        console.warn('Date-mode was set, but moment.js is not availabe. Did you forget to include it in your app?');
+                                        $el.append(byString(item, col.key));
+                                    }
+                                    break;
+                                default:
+                                    break;
+                            }
+                        } else {
+                            $el.append(byString(item, col.key));
+                        }
+                        $compile($el.contents())($scope);
+                    }
+                };
+            }
+        ]);
+
+}(angular));
+angular.module("templates").run(["$templateCache", function($templateCache) {$templateCache.put("table.html","<div class=\"clearfix\">\n    <input type=\"text\" ng-model=\"tablestatus.query\" ng-if=\"tableconfig.searchField\" placeholder=\"{{tableconfig.placeholder}}\" ng-class=\"tableconfig.select.options ? \'col-9 first\':\'col-12\'\">\n    <select ng-if=\"tableconfig.select.options\" class=\"col-3 last\" ng-model=\"tablestatus.select\" ng-options=\"option.value as option.name for option in tableconfig.select.options\">\n    </select>\n</div>\n<table class=\"{{tableconfig.className}}\">\n    <thead>\n        <th ng-repeat=\"col in tableconfig.columns\" ng-click=\"clickHeader(col)\" ng-class=\"{ \'sortable\': col.sortable}\" class=\"{{\'field_\'+col.key + \' \'+ col.className}}\">{{col.columnName}} <i ng-if=\"col.sortable\" class=\"fa\" ng-class=\"{\n            \'fa-angle-up\': tablestatus.sorting.column==col.key,\n            \'fa-flip-vertical\': tablestatus.sorting.direction == \'-\' && tablestatus.sorting.column==col.key\n        }\"></i></th>\n    </thead>\n    <tbody>\n        <tr ng-repeat=\"i in tablesource|filter:tablestatus.query|filter:tablestatus.select|orderBy:tablestatus.sorting.direction+tablestatus.sorting.column|slice:getStartItem():getEnditem()\" ng-class-odd=\"\'odd\'\" ng-class-even=\"\'even\'\" class=\"{{(rowIdentifier) ? \'row_\'+i[rowIdentifier] : \'\'}}\">\n            <td d01-td ng-repeat=\"col in tableconfig.columns\" source=\"i\" config=\"col\"></td d01-td>\n        </tr>\n    </tbody>\n</table>\n<ul class=\"pagination\" ng-if=\"tablestatus.pages != 1\">\n    <li ng-repeat=\"page in pages() track by $index\">\n        <a ng-class=\"{\'active\': $index == tablestatus.activePage}\" ng-click=\"setPage($index)\">{{$index + 1}}</a>\n    </li>\n</ul>\n");
+$templateCache.put("td.html","<td class=\"{{\'field_\'+col.key+ \' \' + col.className}}\"></td>");}]);

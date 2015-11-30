@@ -1,0 +1,24 @@
+{
+  "name": "d01-table",
+  "description": "An angular table directive",
+  "main": "dist/d01-table.js",
+  "authors": [
+    "Laurens Peeters"
+  ],
+  "license": "GPL2",
+  "keywords": [
+    "Angular",
+    "table",
+    "directive"
+  ],
+  "homepage": "https://github.com/peeterslaurens/d01-table",
+  "moduleType": [],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "app/bower_components",
+    "test",
+    "tests"
+  ]
+}
