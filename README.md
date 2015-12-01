@@ -1,6 +1,10 @@
 # D01-Table
 An angular table directive
 
+## Installation
+
+`npm i -S d01-table` or `bower i -S d01-table`
+
 # Versions
 
 ## 0.0.1
