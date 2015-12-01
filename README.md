@@ -7,6 +7,11 @@ An angular table directive
 
 # Versions
 
+## 0.0.2
+
+Bugfixes:
+- Added required filter
+
 ## 0.0.1
 
 Mega-unstable, undocumented an prematurely released version. For skilled ninjas only.

@@ -2,7 +2,7 @@
   "name": "d01-table",
   "description": "An angular table directive",
   "main": "dist/d01-table.js",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "authors": [
     "Laurens Peeters"
   ],
