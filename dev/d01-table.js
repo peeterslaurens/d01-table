@@ -1,6 +1,12 @@
 (function (angular) {
     var d01Table = angular.module('d01-table', []);
 
+    d01Table.filter('slice', function() {
+        return function(arr, start, end) {
+            return (arr || []).slice(start, end);
+        };
+    });
+
     d01Table
         .directive('d01Table', [
             '$parse',
