@@ -10,7 +10,8 @@
     d01Table
         .directive('d01Table', [
             '$parse',
-            function($parse) {
+            '$filter',
+            function($parse, $filter) {
                 return {
 
                     templateUrl: 'table.html',
@@ -53,16 +54,24 @@
                         }
 
                         $scope.getStartItem = function getStartItem() {
-                            return $scope.tablestatus.itemsPerPage * $scope.tablestatus.activePage;
+                            if ($scope.tableconfig.pagination) {
+                                return $scope.tablestatus.itemsPerPage * $scope.tablestatus.activePage;
+                            } else {
+                                return 0;
+                            }
                         }
 
                         $scope.getEnditem = function getEnditem() {
-                            return $scope.getStartItem() + $scope.tablestatus.itemsPerPage;
+                            if ($scope.tableconfig.pagination) {
+                                return $scope.getStartItem() + $scope.tablestatus.itemsPerPage;
+                            } else {
+                                return 10000;
+                            }
                         }
 
                         var initializePagination = function initializePagination () {
-                            $scope.tablestatus.itemsPerPage = $scope.tableconfig.itemsPerPage;
-                            $scope.tablestatus.pages = Math.ceil($scope.tablesource.length / $scope.tableconfig.itemsPerPage);
+                            $scope.tablestatus.itemsPerPage = $scope.tableconfig.pagination.itemsPerPage;
+                            $scope.tablestatus.pages = Math.ceil(($filter('filter')($scope.tablesource, $scope.tableconfig.filter)).length / $scope.tablestatus.itemsPerPage);
                         };
 
                         var initialize = function initialize() {
@@ -77,7 +86,9 @@
                                 }
                             });
 
-                            initializePagination();
+                            if ($scope.tableconfig.pagination) {
+                                initializePagination();
+                            }
                         }
 
                         $scope.$on('setTablePage', function (config, p) {
@@ -85,7 +96,9 @@
                         });
 
                         $scope.$watch('tablesource.length', function (nv, ov) {
-                            initializePagination();
+                            if ($scope.tableconfig.pagination) {
+                                initializePagination();
+                            }
                         });
 
                         initialize();
