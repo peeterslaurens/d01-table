@@ -16,7 +16,7 @@
         </tr>
     </tbody>
 </table>
-<ul class="pagination" ng-if="tablestatus.pages != 1">
+<ul class="pagination" ng-if="tablestatus.pages > 1">
     <li ng-repeat="page in pages() track by $index">
         <a ng-class="{'active': $index == tablestatus.activePage}" ng-click="setPage($index)">{{$index + 1}}</a>
     </li>
