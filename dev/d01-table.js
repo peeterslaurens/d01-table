@@ -120,19 +120,20 @@
                     link: function($scope, $el, attr) {
                         var col = $scope.$eval(attr.config),
                             item = $scope.$eval(attr.source),
-                            byString = function(o, s) {
-                                s = s.replace(/\[(\w+)\]/g, '.$1');
-                                s = s.replace(/^\./, '');
-                                var a = s.split('.');
-                                for (var i = 0, n = a.length; i < n; ++i) {
-                                    var k = a[i];
-                                    if (k in o) {
-                                        o = o[k];
-                                    } else {
+                            byString = function(baseObj, path){
+                                baseObj = baseObj || window;
+                                var opath = path,
+                                    obj = path.split('.');
+                                obj = baseObj[obj[0]];
+                                for (var i=1, path=path.split('.'), len=path.length; i<len; i++){
+                                    console.log(obj, path[i]);
+                                    if (obj === null) {
+                                        console.warn('%s could not be found in your source object', opath, baseObj);
                                         return;
-                                    }
-                                }
-                                return o;
+                                    };
+                                    obj = obj[path[i]];
+                                };
+                                return obj;
                             };
 
                         if (col.template) {
