@@ -126,7 +126,6 @@
                                     obj = path.split('.');
                                 obj = baseObj[obj[0]];
                                 for (var i=1, path=path.split('.'), len=path.length; i<len; i++){
-                                    console.log(obj, path[i]);
                                     if (obj === null) {
                                         console.warn('%s could not be found in your source object', opath, baseObj);
                                         return;
