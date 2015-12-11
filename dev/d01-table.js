@@ -133,25 +133,40 @@
                                     obj = obj[path[i]];
                                 };
                                 return obj;
-                            };
+                            },
+                            byStringV2 = function(baseObj, path, filter){
+                                if(baseObj && path) {
+                                    var span = '<span ng-bind="i.' + path;
+                                    if(filter) {
+                                        span += ' | ' + filter;
+                                    }
+                                    span += '"></span>'
+                                    return span;
+                                } else {
+                                    return byString(baseObj, path);
+                            	}
+                            }
 
                         if (col.template) {
                             $el.append(col.template);
                         } else if (col.mode) {
                             switch(col.mode) {
                                 case 'date':
+                                    $el.append(byStringV2(item, col.key, 'date:\'' + (col.dateFormat || 'dd/MM/yy') + '\''));
+                                    break;
+                                case 'timeAgo': 
                                     if (moment) {
-                                        $el.append(moment(byString(item, col.key)).format(col.dateFormat || 'DD/MM/YY'));
+                                        $el.append('<span am-time-ago="i.' + col.key + '"></span>');
                                     } else {
                                         console.warn('Date-mode was set, but moment.js is not availabe. Did you forget to include it in your app?');
-                                        $el.append(byString(item, col.key));
+                                        $el.append(byStringV2(item, col.key));
                                     }
                                     break;
                                 default:
                                     break;
                             }
                         } else {
-                            $el.append(byString(item, col.key));
+                            $el.append(byStringV2(item, col.key, col.filter));
                         }
                         $compile($el.contents())($scope);
                     }
