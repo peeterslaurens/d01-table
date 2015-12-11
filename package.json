@@ -2,7 +2,7 @@
   "name": "d01-table",
   "description": "An angular table directive",
   "main": "index.js",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
