@@ -81,7 +81,7 @@
                             $scope.rowIdentifier = attr.rowIdentifier;
                             //set the default sorting
                             _.forEach($scope.tableconfig.columns, function(column) {
-                                if (column.defaultsort) {
+                                if (column.defaultSort) {
                                     $scope.tablestatus.sorting.column = column.key;
                                 }
                             });
