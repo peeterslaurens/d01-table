@@ -120,38 +120,67 @@
                     link: function($scope, $el, attr) {
                         var col = $scope.$eval(attr.config),
                             item = $scope.$eval(attr.source),
-                            byString = function(o, s) {
-                                s = s.replace(/\[(\w+)\]/g, '.$1');
-                                s = s.replace(/^\./, '');
-                                var a = s.split('.');
-                                for (var i = 0, n = a.length; i < n; ++i) {
-                                    var k = a[i];
-                                    if (k in o) {
-                                        o = o[k];
-                                    } else {
+                            byString = function(baseObj, path){
+                                baseObj = baseObj || window;
+                                var opath = path,
+                                    obj = path.split('.');
+                                obj = baseObj[obj[0]];
+                                for (var i=1, path=path.split('.'), len=path.length; i<len; i++){
+                                    if (obj === null) {
+                                        console.warn('%s could not be found in your source object', opath, baseObj);
                                         return;
+                                    };
+                                    obj = obj[path[i]];
+                                };
+                                return obj;
+                            },
+                            byStringV2 = function(baseObj, path, filter){
+                                /*
+                                    TODO: check of this path exists
+                                */
+                                if(baseObj && path) {
+                                    var span = '<span ng-bind="i.' + path;
+                                    if(filter) {
+                                        span += ' | ' + filter;
                                     }
-                                }
-                                return o;
-                            };
+                                    span += '"></span>'
+                                    return span;
+                                } else {
+                                    return byString(baseObj, path);
+                            	}
+                            }
 
                         if (col.template) {
                             $el.append(col.template);
                         } else if (col.mode) {
                             switch(col.mode) {
                                 case 'date':
+                                    /*
+                                        TODO: fix this
+                                    */
                                     if (moment) {
-                                        $el.append(moment(byString(item, col.key)).format(col.dateFormat || 'DD/MM/YY'));
+                                        $el.append(byStringV2(item, col.key, 'date:\'' + (col.dateFormat || 'dd/MM/yy') + '\''));
+                                    } else {
+                                        /*
+                                            TODO: check for ng-moment iso just moment
+                                        */
+                                        console.warn('Date-mode was set, but moment.js is not availabe. Did you forget to include it in your app?');
+                                        $el.append(byStringV2(item, col.key));
+                                    }
+                                    break;
+                                case 'timeAgo':
+                                    if (moment) {
+                                        $el.append('<span am-time-ago="i.' + col.key + '"></span>');
                                     } else {
                                         console.warn('Date-mode was set, but moment.js is not availabe. Did you forget to include it in your app?');
-                                        $el.append(byString(item, col.key));
+                                        $el.append(byStringV2(item, col.key));
                                     }
                                     break;
                                 default:
                                     break;
                             }
                         } else {
-                            $el.append(byString(item, col.key));
+                            $el.append(byStringV2(item, col.key, col.filter));
                         }
                         $compile($el.contents())($scope);
                     }

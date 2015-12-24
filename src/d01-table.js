@@ -10,7 +10,8 @@
     d01Table
         .directive('d01Table', [
             '$parse',
-            function($parse) {
+            '$filter',
+            function($parse, $filter) {
                 return {
 
                     templateUrl: 'table.html',
@@ -53,16 +54,24 @@
                         }
 
                         $scope.getStartItem = function getStartItem() {
-                            return $scope.tablestatus.itemsPerPage * $scope.tablestatus.activePage;
+                            if ($scope.tableconfig.pagination) {
+                                return $scope.tablestatus.itemsPerPage * $scope.tablestatus.activePage;
+                            } else {
+                                return 0;
+                            }
                         }
 
                         $scope.getEnditem = function getEnditem() {
-                            return $scope.getStartItem() + $scope.tablestatus.itemsPerPage;
+                            if ($scope.tableconfig.pagination) {
+                                return $scope.getStartItem() + $scope.tablestatus.itemsPerPage;
+                            } else {
+                                return 10000;
+                            }
                         }
 
                         var initializePagination = function initializePagination () {
-                            $scope.tablestatus.itemsPerPage = $scope.tableconfig.itemsPerPage;
-                            $scope.tablestatus.pages = Math.ceil($scope.tablesource.length / $scope.tableconfig.itemsPerPage);
+                            $scope.tablestatus.itemsPerPage = $scope.tableconfig.pagination.itemsPerPage;
+                            $scope.tablestatus.pages = Math.ceil(($filter('filter')($scope.tablesource, $scope.tableconfig.filter)).length / $scope.tablestatus.itemsPerPage);
                         };
 
                         var initialize = function initialize() {
@@ -77,7 +86,9 @@
                                 }
                             });
 
-                            initializePagination();
+                            if ($scope.tableconfig.pagination) {
+                                initializePagination();
+                            }
                         }
 
                         $scope.$on('setTablePage', function (config, p) {
@@ -85,7 +96,9 @@
                         });
 
                         $scope.$watch('tablesource.length', function (nv, ov) {
-                            initializePagination();
+                            if ($scope.tableconfig.pagination) {
+                                initializePagination();
+                            }
                         });
 
                         initialize();
@@ -107,38 +120,67 @@
                     link: function($scope, $el, attr) {
                         var col = $scope.$eval(attr.config),
                             item = $scope.$eval(attr.source),
-                            byString = function(o, s) {
-                                s = s.replace(/\[(\w+)\]/g, '.$1');
-                                s = s.replace(/^\./, '');
-                                var a = s.split('.');
-                                for (var i = 0, n = a.length; i < n; ++i) {
-                                    var k = a[i];
-                                    if (k in o) {
-                                        o = o[k];
-                                    } else {
+                            byString = function(baseObj, path){
+                                baseObj = baseObj || window;
+                                var opath = path,
+                                    obj = path.split('.');
+                                obj = baseObj[obj[0]];
+                                for (var i=1, path=path.split('.'), len=path.length; i<len; i++){
+                                    if (obj === null) {
+                                        console.warn('%s could not be found in your source object', opath, baseObj);
                                         return;
+                                    };
+                                    obj = obj[path[i]];
+                                };
+                                return obj;
+                            },
+                            byStringV2 = function(baseObj, path, filter){
+                                /*
+                                    TODO: check of this path exists
+                                */
+                                if(baseObj && path) {
+                                    var span = '<span ng-bind="i.' + path;
+                                    if(filter) {
+                                        span += ' | ' + filter;
                                     }
-                                }
-                                return o;
-                            };
+                                    span += '"></span>'
+                                    return span;
+                                } else {
+                                    return byString(baseObj, path);
+                            	}
+                            }
 
                         if (col.template) {
                             $el.append(col.template);
                         } else if (col.mode) {
                             switch(col.mode) {
                                 case 'date':
+                                    /*
+                                        TODO: fix this
+                                    */
                                     if (moment) {
-                                        $el.append(moment(byString(item, col.key)).format(col.dateFormat || 'DD/MM/YY'));
+                                        $el.append(byStringV2(item, col.key, 'date:\'' + (col.dateFormat || 'dd/MM/yy') + '\''));
+                                    } else {
+                                        /*
+                                            TODO: check for ng-moment iso just moment
+                                        */
+                                        console.warn('Date-mode was set, but moment.js is not availabe. Did you forget to include it in your app?');
+                                        $el.append(byStringV2(item, col.key));
+                                    }
+                                    break;
+                                case 'timeAgo':
+                                    if (moment) {
+                                        $el.append('<span am-time-ago="i.' + col.key + '"></span>');
                                     } else {
                                         console.warn('Date-mode was set, but moment.js is not availabe. Did you forget to include it in your app?');
-                                        $el.append(byString(item, col.key));
+                                        $el.append(byStringV2(item, col.key));
                                     }
                                     break;
                                 default:
                                     break;
                             }
                         } else {
-                            $el.append(byString(item, col.key));
+                            $el.append(byStringV2(item, col.key, col.filter));
                         }
                         $compile($el.contents())($scope);
                     }
@@ -147,5 +189,5 @@
         ]);
 
 }(angular));
-angular.module("d01-table").run(["$templateCache", function($templateCache) {$templateCache.put("table.html","<div class=\"clearfix\">\n    <input type=\"text\" ng-model=\"tablestatus.query\" ng-if=\"tableconfig.searchField\" placeholder=\"{{tableconfig.placeholder}}\" ng-class=\"tableconfig.select.options ? \'col-9 first\':\'col-12\'\">\n    <select ng-if=\"tableconfig.select.options\" class=\"col-3 last\" ng-model=\"tablestatus.select\" ng-options=\"option.value as option.name for option in tableconfig.select.options\">\n    </select>\n</div>\n<table class=\"{{tableconfig.className}}\">\n    <thead>\n        <th ng-repeat=\"col in tableconfig.columns\" ng-click=\"clickHeader(col)\" ng-class=\"{ \'sortable\': col.sortable}\" class=\"{{\'field_\'+col.key + \' \'+ col.className}}\">{{col.columnName}} <i ng-if=\"col.sortable\" class=\"fa\" ng-class=\"{\n            \'fa-angle-up\': tablestatus.sorting.column==col.key,\n            \'fa-flip-vertical\': tablestatus.sorting.direction == \'-\' && tablestatus.sorting.column==col.key\n        }\"></i></th>\n    </thead>\n    <tbody>\n        <tr ng-repeat=\"i in tablesource|filter:tablestatus.query|filter:tablestatus.select|orderBy:tablestatus.sorting.direction+tablestatus.sorting.column|filter:tableconfig.filter|slice:getStartItem():getEnditem()\" ng-class-odd=\"\'odd\'\" ng-class-even=\"\'even\'\" class=\"{{(rowIdentifier) ? \'row_\'+i[rowIdentifier] : \'\'}}\">\n            <td d01-td ng-repeat=\"col in tableconfig.columns\" source=\"i\" config=\"col\"></td d01-td>\n        </tr>\n    </tbody>\n</table>\n<ul class=\"pagination\" ng-if=\"tablestatus.pages != 1\">\n    <li ng-repeat=\"page in pages() track by $index\">\n        <a ng-class=\"{\'active\': $index == tablestatus.activePage}\" ng-click=\"setPage($index)\">{{$index + 1}}</a>\n    </li>\n</ul>\n");
+angular.module("d01-table").run(["$templateCache", function($templateCache) {$templateCache.put("table.html","<div class=\"clearfix\">\r\n    <input type=\"text\" ng-model=\"tablestatus.query\" ng-if=\"tableconfig.searchField\" placeholder=\"{{tableconfig.placeholder}}\" ng-class=\"tableconfig.select.options ? \'col-9 first\':\'col-12\'\">\r\n    <select ng-if=\"tableconfig.select.options\" class=\"col-3 last\" ng-model=\"tablestatus.select\" ng-options=\"option.value as option.name for option in tableconfig.select.options\">\r\n    </select>\r\n</div>\r\n<table class=\"{{tableconfig.className}}\">\r\n    <thead>\r\n        <th ng-repeat=\"col in tableconfig.columns\" ng-click=\"clickHeader(col)\" ng-class=\"{ \'sortable\': col.sortable}\" class=\"{{\'field_\'+col.key + \' \'+ col.className}}\">{{col.columnName}} <i ng-if=\"col.sortable\" class=\"fa\" ng-class=\"{\r\n            \'fa-angle-up\': tablestatus.sorting.column==col.key,\r\n            \'fa-flip-vertical\': tablestatus.sorting.direction == \'-\' && tablestatus.sorting.column==col.key\r\n        }\"></i></th>\r\n    </thead>\r\n    <tbody>\r\n        <tr ng-repeat=\"i in tablesource|filter:tablestatus.query|filter:tablestatus.select|orderBy:tablestatus.sorting.direction+tablestatus.sorting.column|filter:tableconfig.filter|slice:getStartItem():getEnditem()\" ng-class-odd=\"\'odd\'\" ng-class-even=\"\'even\'\" class=\"{{(rowIdentifier) ? \'row_\'+i[rowIdentifier] : \'\'}}\">\r\n            <td d01-td ng-repeat=\"col in tableconfig.columns\" source=\"i\" config=\"col\"></td d01-td>\r\n        </tr>\r\n    </tbody>\r\n</table>\r\n<ul class=\"pagination\" ng-if=\"tablestatus.pages > 1\">\r\n    <li ng-repeat=\"page in pages() track by $index\">\r\n        <a ng-class=\"{\'active\': $index == tablestatus.activePage}\" ng-click=\"setPage($index)\">{{$index + 1}}</a>\r\n    </li>\r\n</ul>\r\n");
 $templateCache.put("td.html","<td class=\"{{\'field_\'+col.key+ \' \' + col.className}}\"></td>");}]);
