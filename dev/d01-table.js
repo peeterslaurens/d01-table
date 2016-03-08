@@ -14,12 +14,12 @@
             '$cookies',
             function($parse, $filter, $cookies) {
                 return {
+
                     templateUrl: 'table.html',
                     restrict: 'AE',
-                    scope:{
-                        filter: '@'
-                    },
+                    scope: true,
                     link: function($scope, $el, attr) {
+
                         $scope.tablestatus = {
                             query: '',
                             select: '',
@@ -31,8 +31,6 @@
                                 column: ''
                             }
                         };
-
-
 
                         $scope.clickHeader = function clickHeader(col) {
                             if (col.sortable) {
@@ -203,7 +201,6 @@
                                 initializePagination();
                             }
                         });
-
 
                         initialize();
                     }
