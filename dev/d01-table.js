@@ -11,8 +11,8 @@
         .directive('d01Table', [
             '$parse',
             '$filter',
-            '$cookies',
-            function($parse, $filter, $cookies) {
+            '$window',
+            function($parse, $filter, $window) {
                 return {
 
                     templateUrl: 'table.html',
@@ -59,20 +59,15 @@
                             return o;
                         }
 
-                        Date.prototype.addHours= function(h){
-                            this.setHours(this.getHours()+h);
-                            return this;
-                        }
-
-                        //get cookie and check if exists
-                        var _selectCookie = $cookies.get('filterSelect');
-                        if(_selectCookie){
-                            //Show filtered data based on cookie value
-                            $scope.cookie = _selectCookie;
+                        //get stored session value and check if exists
+                        var _storedValue = $window.sessionStorage.getItem("filterSelect")
+                        if(_storedValue){
+                            //Show filtered data based on stored session value
+                            $scope.storedValue = _storedValue;
                         }
                         else{
                             //Show all data
-                            $scope.cookie = "All";
+                            $scope.storedValue = "All";
                         }
 
                         var filterTable = function filterTable() {
@@ -101,13 +96,13 @@
                                 $scope.selectOptions.unshift("All");
 
                                 //populate data with filtered results
-                                if(_selectCookie){
+                                if(_storedValue){
                                     $scope.tablesource = $scope.$parent.$eval(attr.source);
-                                    if(_selectCookie != 'All'){
+                                    if(_storedValue != 'All'){
                                         var _newData = [];
                                         _.forEach($scope.tablesource, function(rowObj){
                                             var _value = Object.byString(rowObj, _selectedColumnKey);
-                                            if(_selectCookie == _value){
+                                            if(_storedValue == _value){
                                                 _newData.push(rowObj);
                                             }
                                         });
@@ -120,11 +115,8 @@
                                     //reset data
                                     $scope.tablesource = $scope.$parent.$eval(attr.source);
                                     if(nv){
-                                        //store selection in cookie
-                                        var inOneHour = new Date().addHours(1);
-                                        $cookies.put('filterSelect', nv, {
-                                            expires: inOneHour
-                                        });
+                                        //store selection in sessionstorage
+                                        $window.sessionStorage.setItem("filterSelect", nv);
                                         if(nv == "All"){
                                             $scope.tablesource = $scope.$parent.$eval(attr.source);
                                         }
