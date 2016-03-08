@@ -11,14 +11,15 @@
         .directive('d01Table', [
             '$parse',
             '$filter',
-            function($parse, $filter) {
+            '$cookies',
+            function($parse, $filter, $cookies) {
                 return {
-
                     templateUrl: 'table.html',
                     restrict: 'AE',
-                    scope: true,
+                    scope:{
+                        filter: '@'
+                    },
                     link: function($scope, $el, attr) {
-
                         $scope.tablestatus = {
                             query: '',
                             select: '',
@@ -30,6 +31,8 @@
                                 column: ''
                             }
                         };
+
+
 
                         $scope.clickHeader = function clickHeader(col) {
                             if (col.sortable) {
@@ -43,6 +46,105 @@
                             }
                         };
 
+                        Object.byString = function(o, s) {
+                            s = s.replace(/\[(\w+)\]/g, '.$1'); // convert indexes to properties
+                            s = s.replace(/^\./, '');           // strip a leading dot
+                            var a = s.split('.');
+                            for (var i = 0, n = a.length; i < n; ++i) {
+                                var k = a[i];
+                                if (k in o) {
+                                    o = o[k];
+                                } else {
+                                    return;
+                                }
+                            }
+                            return o;
+                        }
+
+                        Date.prototype.addHours= function(h){
+                            this.setHours(this.getHours()+h);
+                            return this;
+                        }
+
+                        //get cookie and check if exists
+                        var _selectCookie = $cookies.get('filterSelect');
+                        if(_selectCookie){
+                            //Show filtered data based on cookie value
+                            $scope.cookie = _selectCookie;
+                        }
+                        else{
+                            //Show all data
+                            $scope.cookie = "All";
+                        }
+
+                        var filterTable = function filterTable() {
+                            //get data + config
+                            $scope.data = $scope.$parent.$eval(attr.source);
+                            var _config = $scope.$parent.$eval(attr.config);
+
+                            if (_config.filterColumn){
+
+                                //get the column name to filter on
+                                var _allColumns = _config.columns;
+                                var _selectedColumn = _allColumns.filter(function( obj ) {
+                                    return obj.columnName == _config.filterColumn;
+                                });
+                                var _selectedColumnKey = _selectedColumn[0].key;
+                                $scope.searchKey = _selectedColumnKey;
+
+                                //populate all the column options in the select
+                                $scope.options = [];
+                                _.forEach($scope.data, function(obj){
+                                    $scope.singleData = obj;
+                                    $scope.singleString = Object.byString($scope.singleData, _selectedColumnKey);
+                                    $scope.options.push($scope.singleString);
+                                });
+                                $scope.selectOptions = _.uniq($scope.options);
+                                $scope.selectOptions.unshift("All");
+
+                                //populate data with filtered results
+                                if(_selectCookie){
+                                    $scope.tablesource = $scope.$parent.$eval(attr.source);
+                                    if(_selectCookie != 'All'){
+                                        var _newData = [];
+                                        _.forEach($scope.tablesource, function(rowObj){
+                                            var _value = Object.byString(rowObj, _selectedColumnKey);
+                                            if(_selectCookie == _value){
+                                                _newData.push(rowObj);
+                                            }
+                                        });
+                                        $scope.tablesource = _newData;
+                                    }
+                                }
+
+                                //on select change
+                                $scope.$watch('tablestatus.select', function(nv, ov){
+                                    //reset data
+                                    $scope.tablesource = $scope.$parent.$eval(attr.source);
+                                    if(nv){
+                                        //store selection in cookie
+                                        var inOneHour = new Date().addHours(1);
+                                        $cookies.put('filterSelect', nv, {
+                                            expires: inOneHour
+                                        });
+                                        if(nv == "All"){
+                                            $scope.tablesource = $scope.$parent.$eval(attr.source);
+                                        }
+                                        else{
+                                            //populate data with filtered results
+                                            var _newData = [];
+                                            _.forEach($scope.tablesource, function(rowObj){
+                                                var _value = Object.byString(rowObj, _selectedColumnKey);
+                                                if(nv == _value){
+                                                    _newData.push(rowObj);
+                                                }
+                                            });
+                                            $scope.tablesource = _newData;
+                                        }
+                                    }
+                                });
+                            }
+                        }
 
                         //PAGINATION
                         $scope.pages = function pages() {
@@ -76,6 +178,7 @@
 
                         var initialize = function initialize() {
                             $scope.tablesource = $scope.$parent.$eval(attr.source);
+                            filterTable();
                             $scope.tableconfig = $scope.$parent.$eval(attr.config);
                             $scope.tableconfig.filter = $scope.tableconfig.filter || {}
                             $scope.rowIdentifier = attr.rowIdentifier;
@@ -100,6 +203,7 @@
                                 initializePagination();
                             }
                         });
+
 
                         initialize();
                     }
@@ -136,8 +240,8 @@
                             },
                             byStringV2 = function(baseObj, path, filter){
                                 /*
-                                    TODO: check of this path exists
-                                */
+                                 TODO: check of this path exists
+                                 */
                                 if(baseObj && path) {
                                     var span = '<span ng-bind="i.' + path;
                                     if(filter) {
@@ -147,7 +251,7 @@
                                     return span;
                                 } else {
                                     return byString(baseObj, path);
-                            	}
+                                }
                             }
 
                         if (col.template) {
@@ -156,14 +260,14 @@
                             switch(col.mode) {
                                 case 'date':
                                     /*
-                                        TODO: fix this
-                                    */
+                                     TODO: fix this
+                                     */
                                     if (moment) {
                                         $el.append(byStringV2(item, col.key, 'date:\'' + (col.dateFormat || 'dd/MM/yy') + '\''));
                                     } else {
                                         /*
-                                            TODO: check for ng-moment iso just moment
-                                        */
+                                         TODO: check for ng-moment iso just moment
+                                         */
                                         console.warn('Date-mode was set, but moment.js is not availabe. Did you forget to include it in your app?');
                                         $el.append(byStringV2(item, col.key));
                                     }
