@@ -16,6 +16,7 @@
         ng-options="option.value as option.name for option in tableconfig.select.options"
         ng-class="{ 'col-3 last': !tableconfig.select.style.override }"
         >
+        <option value="" disabled="disabled">{{tableconfig.select.placeholder}}</option>
     </select>
 </div>
 <table class="{{tableconfig.className}}">
