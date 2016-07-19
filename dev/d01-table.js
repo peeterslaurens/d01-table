@@ -10,7 +10,8 @@
     d01Table
         .directive('d01Table', [
             '$parse',
-            function($parse) {
+            '$filter',
+            function($parse, $filter) {
                 return {
 
                     templateUrl: 'table.html',
@@ -53,16 +54,24 @@
                         }
 
                         $scope.getStartItem = function getStartItem() {
-                            return $scope.tablestatus.itemsPerPage * $scope.tablestatus.activePage;
+                            if ($scope.tableconfig.pagination) {
+                                return $scope.tablestatus.itemsPerPage * $scope.tablestatus.activePage;
+                            } else {
+                                return 0;
+                            }
                         }
 
                         $scope.getEnditem = function getEnditem() {
-                            return $scope.getStartItem() + $scope.tablestatus.itemsPerPage;
+                            if ($scope.tableconfig.pagination) {
+                                return $scope.getStartItem() + $scope.tablestatus.itemsPerPage;
+                            } else {
+                                return 10000;
+                            }
                         }
 
                         var initializePagination = function initializePagination () {
-                            $scope.tablestatus.itemsPerPage = $scope.tableconfig.pagination && $scope.tableconfig.pagination.itemsPerPage ? $scope.tableconfig.pagination.itemsPerPage : $scope.tablesource.length;
-                            $scope.tablestatus.pages = Math.ceil($scope.tablesource.length / $scope.tablestatus.itemsPerPage);
+                            $scope.tablestatus.itemsPerPage = $scope.tableconfig.pagination.itemsPerPage;
+                            $scope.tablestatus.pages = Math.ceil(($filter('filter')($scope.tablesource, $scope.tableconfig.filter)).length / $scope.tablestatus.itemsPerPage);
                         };
 
                         var initialize = function initialize() {
@@ -77,7 +86,9 @@
                                 }
                             });
 
-                            initializePagination();
+                            if ($scope.tableconfig.pagination) {
+                                initializePagination();
+                            }
                         }
 
                         $scope.$on('setTablePage', function (config, p) {
@@ -85,7 +96,9 @@
                         });
 
                         $scope.$watch('tablesource.length', function (nv, ov) {
-                            initializePagination();
+                            if ($scope.tableconfig.pagination) {
+                                initializePagination();
+                            }
                         });
 
                         initialize();
@@ -107,38 +120,53 @@
                     link: function($scope, $el, attr) {
                         var col = $scope.$eval(attr.config),
                             item = $scope.$eval(attr.source),
-                            byString = function(o, s) {
-                                s = s.replace(/\[(\w+)\]/g, '.$1');
-                                s = s.replace(/^\./, '');
-                                var a = s.split('.');
-                                for (var i = 0, n = a.length; i < n; ++i) {
-                                    var k = a[i];
-                                    if (k in o) {
-                                        o = o[k];
-                                    } else {
+                            byString = function(baseObj, path){
+                                baseObj = baseObj || window;
+                                var opath = path,
+                                    obj = path.split('.');
+                                obj = baseObj[obj[0]];
+                                for (var i=1, path=path.split('.'), len=path.length; i<len; i++){
+                                    if (obj === null) {
+                                        console.warn('%s could not be found in your source object', opath, baseObj);
                                         return;
+                                    };
+                                    obj = obj[path[i]];
+                                };
+                                return obj;
+                            },
+                            byStringV2 = function(baseObj, path, filter){
+                                if(baseObj && path) {
+                                    var span = '<span ng-bind="i.' + path;
+                                    if(filter) {
+                                        span += ' | ' + filter;
                                     }
-                                }
-                                return o;
-                            };
+                                    span += '"></span>'
+                                    return span;
+                                } else {
+                                    return byString(baseObj, path);
+                            	}
+                            }
 
                         if (col.template) {
                             $el.append(col.template);
                         } else if (col.mode) {
                             switch(col.mode) {
                                 case 'date':
+                                    $el.append(byStringV2(item, col.key, 'date:\'' + (col.dateFormat || 'dd/MM/yy') + '\''));
+                                    break;
+                                case 'timeAgo': 
                                     if (moment) {
-                                        $el.append(moment(byString(item, col.key)).format(col.dateFormat || 'DD/MM/YY'));
+                                        $el.append('<span am-time-ago="i.' + col.key + '"></span>');
                                     } else {
                                         console.warn('Date-mode was set, but moment.js is not availabe. Did you forget to include it in your app?');
-                                        $el.append(byString(item, col.key));
+                                        $el.append(byStringV2(item, col.key));
                                     }
                                     break;
                                 default:
                                     break;
                             }
                         } else {
-                            $el.append(byString(item, col.key));
+                            $el.append(byStringV2(item, col.key, col.filter));
                         }
                         $compile($el.contents())($scope);
                     }
