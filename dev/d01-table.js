@@ -81,7 +81,7 @@
                             $scope.rowIdentifier = attr.rowIdentifier;
                             //set the default sorting
                             _.forEach($scope.tableconfig.columns, function(column) {
-                                if (column.defaultsort) {
+                                if (column.defaultSort) {
                                     $scope.tablestatus.sorting.column = column.key;
                                 }
                             });
@@ -135,6 +135,9 @@
                                 return obj;
                             },
                             byStringV2 = function(baseObj, path, filter){
+                                /*
+                                    TODO: check of this path exists
+                                */
                                 if(baseObj && path) {
                                     var span = '<span ng-bind="i.' + path;
                                     if(filter) {
@@ -152,9 +155,20 @@
                         } else if (col.mode) {
                             switch(col.mode) {
                                 case 'date':
-                                    $el.append(byStringV2(item, col.key, 'date:\'' + (col.dateFormat || 'dd/MM/yy') + '\''));
+                                    /*
+                                        TODO: fix this
+                                    */
+                                    if (moment) {
+                                        $el.append(byStringV2(item, col.key, 'date:\'' + (col.dateFormat || 'dd/MM/yy') + '\''));
+                                    } else {
+                                        /*
+                                            TODO: check for ng-moment iso just moment
+                                        */
+                                        console.warn('Date-mode was set, but moment.js is not availabe. Did you forget to include it in your app?');
+                                        $el.append(byStringV2(item, col.key));
+                                    }
                                     break;
-                                case 'timeAgo': 
+                                case 'timeAgo':
                                     if (moment) {
                                         $el.append('<span am-time-ago="i.' + col.key + '"></span>');
                                     } else {
