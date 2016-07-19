@@ -61,8 +61,8 @@
                         }
 
                         var initializePagination = function initializePagination () {
-                            $scope.tablestatus.itemsPerPage = $scope.tableconfig.itemsPerPage;
-                            $scope.tablestatus.pages = Math.ceil($scope.tablesource.length / $scope.tableconfig.itemsPerPage);
+                            $scope.tablestatus.itemsPerPage = $scope.tableconfig.pagination.itemsPerPage;
+                            $scope.tablestatus.pages = Math.ceil($scope.tablesource.length / $scope.tableconfig.pagination.itemsPerPage);
                         };
 
                         var initialize = function initialize() {
