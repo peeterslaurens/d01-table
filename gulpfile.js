@@ -24,7 +24,7 @@ var plugins = require('gulp-load-plugins')({
             .pipe(gulp.dest(srcRoot));
     });
 
-    gulp.task('concat-dist', function() {
+    gulp.task('concat-dist', ['templateCache'], function() {
         return gulp.src(devRoot+'/**/*.js')
             .pipe(plugins.concat('d01-table.js'))
             .pipe(plugins.uglify())
