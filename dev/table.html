@@ -1,9 +1,8 @@
 <div class="d01-table-filter clearfix">
-    <div class="d01-table-filter-field">
+    <div class="d01-table-filter-field" ng-if="tableconfig.searchField.enabled">
         <label ng-bind="tableconfig.searchField.label"></label>
         <input
             type="text"
-            ng-if="tableconfig.searchField.enabled"
             class="{{tableconfig.searchField.style.className}}"
             placeholder="{{tableconfig.searchField.placeholder}}"
             ng-model="tablestatus.query"
@@ -12,10 +11,9 @@
                 'col-12': !tableconfig.select.options && !tableconfig.searchField.style.override
             }">
     </div>
-    <div class="d01-table-filter-field">
+    <div class="d01-table-filter-field" ng-if="tableconfig.select.options">
         <label ng-bind="tableconfig.select.label"></label>
         <select
-            ng-if="tableconfig.select.options"
             class="{{tableconfig.select.style.className}}"
             ng-model="tablestatus.select"
             ng-options="option.value as option.name for option in tableconfig.select.options"
