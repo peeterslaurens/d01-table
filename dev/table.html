@@ -44,7 +44,7 @@
     </thead>
     <tbody>
         <tr
-            ng-repeat="i in tablesource | filter:tablestatus.query | filter:tablestatus.select | orderBy:tablestatus.sorting.direction+tablestatus.sorting.column | filter:tableconfig.filter | slice:getStartItem():getEnditem()"
+            ng-repeat="i in tablestatus.filteredData = (tablesource | filter:tablestatus.query | filter:tablestatus.select | orderBy:tablestatus.sorting.direction+tablestatus.sorting.column | filter:tableconfig.filter) | slice:getStartItem():getEnditem()"
             ng-class-odd="'odd'"
             ng-class-even="'even'"
             class="{{(rowIdentifier) ? 'row_'+i[rowIdentifier] : ''}}"
