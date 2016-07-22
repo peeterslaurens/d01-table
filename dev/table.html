@@ -1,23 +1,29 @@
-<div class="clearfix">
-    <input
-        type="text"
-        ng-if="tableconfig.searchField.enabled"
-        class="{{tableconfig.searchField.style.className}}"
-        placeholder="{{tableconfig.searchField.placeholder}}"
-        ng-model="tablestatus.query"
-        ng-class="{
-            'col-9 first': tableconfig.select.options && !tableconfig.searchField.style.override,
-            'col-12': !tableconfig.select.options && !tableconfig.searchField.style.override
-        }">
-    <select
-        ng-if="tableconfig.select.options"
-        class="{{tableconfig.select.style.className}}"
-        ng-model="tablestatus.select"
-        ng-options="option.value as option.name for option in tableconfig.select.options"
-        ng-class="{ 'col-3 last': !tableconfig.select.style.override }"
-        >
-        <option value="" disabled="disabled">{{tableconfig.select.placeholder}}</option>
-    </select>
+<div class="d01-table-filter clearfix">
+    <div class="d01-table-filter-field">
+        <label ng-bind="tableconfig.searchField.label"></label>
+        <input
+            type="text"
+            ng-if="tableconfig.searchField.enabled"
+            class="{{tableconfig.searchField.style.className}}"
+            placeholder="{{tableconfig.searchField.placeholder}}"
+            ng-model="tablestatus.query"
+            ng-class="{
+                'col-9 first': tableconfig.select.options && !tableconfig.searchField.style.override,
+                'col-12': !tableconfig.select.options && !tableconfig.searchField.style.override
+            }">
+    </div>
+    <div class="d01-table-filter-field">
+        <label ng-bind="tableconfig.select.label"></label>
+        <select
+            ng-if="tableconfig.select.options"
+            class="{{tableconfig.select.style.className}}"
+            ng-model="tablestatus.select"
+            ng-options="option.value as option.name for option in tableconfig.select.options"
+            ng-class="{ 'col-3 last': !tableconfig.select.style.override }"
+            >
+            <option value="" disabled="disabled">{{tableconfig.select.placeholder}}</option>
+        </select>
+    </div>
 </div>
 <table class="{{tableconfig.className}}">
     <thead>
