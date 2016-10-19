@@ -21,7 +21,7 @@
 
                         $scope.tablestatus = {
                             query: '',
-                            select: '',
+                            select: [],
                             pages: 0,
                             activePage: 0,
                             itemsPerPage: 0,
@@ -68,6 +68,34 @@
                             } else {
                                 return 10000;
                             }
+                        };
+
+                        $scope.selectFilter = function selectFilter(item) {
+                            var isMatched = true;
+
+                            _.forEach($scope.tableconfig.selects, function(slct, index) {
+                                if(slct.filterKey) {
+                                    if(
+                                        $scope.tablestatus.select[index] &&
+                                        fetchFromObject(item, slct.filterKey) !== $scope.tablestatus.select[index]
+                                    ) {
+                                        isMatched = false;
+                                    }
+                                }
+                            });
+
+                            return isMatched;
+                        };
+                        
+                        var fetchFromObject = function fetchFromObject(obj, prop) {
+                            var result = obj;
+                            var nestedProperties = prop.split('.');
+
+                            _.forEach(nestedProperties, function(propName) {
+                                result = result[propName];
+                            });
+
+                            return result;
                         };
 
                         var initializePagination = function initializePagination () {
