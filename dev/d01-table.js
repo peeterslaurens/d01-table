@@ -73,9 +73,9 @@
                         $scope.selectFilter = function selectFilter(item) {
                             var isMatched = false;
 
-                            _.forEach(tableconfig.selects, function(slct, index) {
+                            _.forEach($scope.tableconfig.selects, function(slct, index) {
                                 if(slct.filterKey) {
-                                    if(fetchFromObject(item, slct.filterKey) === tablestatus.select[index]) {
+                                    if(fetchFromObject(item, slct.filterKey) === $scope.tablestatus.select[index]) {
                                         isMatched = true;
                                         return false;
                                     }
