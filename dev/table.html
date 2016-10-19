@@ -11,15 +11,15 @@
                 'col-12': !tableconfig.select.options && !tableconfig.searchField.style.override
             }">
     </div>
-    <div class="d01-table-filter-field" ng-if="tableconfig.select.options">
-        <label ng-bind="tableconfig.select.label"></label>
+    <div class="d01-table-filter-field" ng-repeat="select in tableconfig.selects track by $index" ng-if="select.options">
+        <label ng-bind="select.label"></label>
         <select
-            class="{{tableconfig.select.style.className}}"
-            ng-model="tablestatus.select"
-            ng-options="option.value as option.name for option in tableconfig.select.options"
-            ng-class="{ 'col-3 last': !tableconfig.select.style.override }"
+            class="{{select.style.className}}"
+            ng-model="tablestatus.select[$index]"
+            ng-options="option.value as option.name for option in select.options"
+            ng-class="{ 'col-3 last': !select.style.override }"
             >
-            <option value="" disabled="disabled">{{tableconfig.select.placeholder}}</option>
+            <option value="" disabled="disabled">{{select.placeholder}}</option>
         </select>
     </div>
 </div>
@@ -42,7 +42,7 @@
     </thead>
     <tbody>
         <tr
-            ng-repeat="i in tablestatus.filteredData = (tablesource | filter:tablestatus.query | filter:tablestatus.select | orderBy:tablestatus.sorting.direction+tablestatus.sorting.column | filter:tableconfig.filter) | slice:getStartItem():getEnditem()"
+            ng-repeat="i in tablestatus.filteredData = (tablesource | filter:tablestatus.query | filter: selectFilter | orderBy:tablestatus.sorting.direction+tablestatus.sorting.column | filter:tableconfig.filter) | slice:getStartItem():getEnditem()"
             ng-class-odd="'odd'"
             ng-class-even="'even'"
             class="{{(rowIdentifier) ? 'row_'+i[rowIdentifier] : ''}}"

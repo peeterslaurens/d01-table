@@ -21,7 +21,7 @@
 
                         $scope.tablestatus = {
                             query: '',
-                            select: '',
+                            select: [],
                             pages: 0,
                             activePage: 0,
                             itemsPerPage: 0,
@@ -68,6 +68,36 @@
                             } else {
                                 return 10000;
                             }
+                        };
+
+                        $scope.selectFilter = function selectFilter(item) {
+                            var isMatched = false;
+
+                            _.forEach(tableconfig.selects, function(slct, index) {
+                                if(slct.filterKey) {
+                                    if(fetchFromObject(item, slct.filterKey) === tablestatus.select[index]) {
+                                        isMatched = true;
+                                        return false;
+                                    }
+                                }
+                            });
+
+                            return isMatched;
+                        };
+
+                        // From: http://stackoverflow.com/questions/4255472/javascript-object-access-variable-property-by-name-as-string
+                        var fetchFromObject = function fetchFromObject(obj, prop) {
+
+                            if(typeof obj === 'undefined') {
+                                return false;
+                            }
+
+                            var _index = prop.indexOf('.');
+                            if(_index > -1) {
+                                return fetchFromObject(obj[prop.substring(0, _index)], prop.substr(_index + 1));
+                            }
+
+                            return obj[prop];
                         };
 
                         var initializePagination = function initializePagination () {
