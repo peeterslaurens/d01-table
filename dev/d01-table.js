@@ -71,33 +71,31 @@
                         };
 
                         $scope.selectFilter = function selectFilter(item) {
-                            var isMatched = false;
+                            var isMatched = true;
 
                             _.forEach($scope.tableconfig.selects, function(slct, index) {
                                 if(slct.filterKey) {
-                                    if(fetchFromObject(item, slct.filterKey) === $scope.tablestatus.select[index]) {
-                                        isMatched = true;
-                                        return false;
+                                    if(
+                                        $scope.tablestatus.select[index] &&
+                                        fetchFromObject(item, slct.filterKey) !== $scope.tablestatus.select[index]
+                                    ) {
+                                        isMatched = false;
                                     }
                                 }
                             });
 
                             return isMatched;
                         };
-
-                        // From: http://stackoverflow.com/questions/4255472/javascript-object-access-variable-property-by-name-as-string
+                        
                         var fetchFromObject = function fetchFromObject(obj, prop) {
+                            var result = obj;
+                            var nestedProperties = prop.split('.');
 
-                            if(typeof obj === 'undefined') {
-                                return false;
-                            }
+                            _.forEach(nestedProperties, function(propName) {
+                                result = result[propName];
+                            });
 
-                            var _index = prop.indexOf('.');
-                            if(_index > -1) {
-                                return fetchFromObject(obj[prop.substring(0, _index)], prop.substr(_index + 1));
-                            }
-
-                            return obj[prop];
+                            return result;
                         };
 
                         var initializePagination = function initializePagination () {
