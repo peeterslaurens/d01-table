@@ -62,7 +62,7 @@
                         };
 
                         $scope.getStartItem = function getStartItem() {
-                            if ($scope.tableconfig.pagination) {
+                            if ($scope.tableconfig.pagination && !$scope.tableconfig.pagination.async) {
                                 return $scope.tablestatus.itemsPerPage * $scope.tablestatus.activePage;
                             } else {
                                 return 0;
@@ -111,7 +111,7 @@
                             $scope.tablestatus.itemsPerPage = $scope.tableconfig.pagination.itemsPerPage;
 
                             if($scope.tableconfig.pagination.async) {
-                                $scope.tablestatus.pages = $scope.tableconfig.pagination.itemsLength;
+                                itemsAmount = $scope.tableconfig.pagination.itemsLength;
                             }
 
                             $scope.tablestatus.pages = Math.ceil(itemsAmount / $scope.tablestatus.itemsPerPage);
@@ -128,7 +128,7 @@
                                 end: null
                             };
 
-                            requestObj.start = ($scope.tablestatus.pages % $scope.tablestatus.itemsPerPage) * page;
+                            requestObj.start = ($scope.tablestatus.itemsPerPage -1) * page;
                             requestObj.end = requestObj.start + ($scope.tablestatus.itemsPerPage -1);
 
                             $scope.onPageChange(requestObj);
@@ -157,7 +157,7 @@
                             $scope.setPage(parseInt(p));
                         });
 
-                        $scope.watch('currentPage', function(nv, ov) {
+                        $scope.$watch('currentPage', function(nv, ov) {
                             if (nv !== ov && nv < $scope.tablestatus.pages) {
                                 $scope.tablestatus.activePage = nv;
 
