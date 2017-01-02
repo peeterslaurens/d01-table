@@ -16,19 +16,25 @@
 
                     templateUrl: 'table.html',
                     restrict: 'AE',
-                    scope: true,
+                    scope: {
+                        tablesource: '=source',
+                        tableconfig: '=config',
+                        onPageChange: '=',
+                        currentPage: '='
+                    },
                     link: function($scope, $el, attr) {
 
                         $scope.tablestatus = {
                             query: '',
-                            select: '',
+                            select: [],
                             pages: 0,
                             activePage: 0,
                             itemsPerPage: 0,
                             sorting: {
                                 direction: '-',
                                 column: ''
-                            }
+                            },
+                            filteredData: []
                         };
 
                         $scope.clickHeader = function clickHeader(col) {
@@ -51,15 +57,17 @@
 
                         $scope.setPage = function setPage(page) {
                             $scope.tablestatus.activePage = page;
-                        }
+
+                            requestNewData(page);
+                        };
 
                         $scope.getStartItem = function getStartItem() {
-                            if ($scope.tableconfig.pagination) {
+                            if ($scope.tableconfig.pagination && !$scope.tableconfig.pagination.async) {
                                 return $scope.tablestatus.itemsPerPage * $scope.tablestatus.activePage;
                             } else {
                                 return 0;
                             }
-                        }
+                        };
 
                         $scope.getEnditem = function getEnditem() {
                             if ($scope.tableconfig.pagination) {
@@ -67,17 +75,71 @@
                             } else {
                                 return 10000;
                             }
-                        }
+                        };
+
+                        $scope.selectFilter = function selectFilter(item) {
+                            var isMatched = true;
+
+                            _.forEach($scope.tableconfig.selects, function(slct, index) {
+                                if(slct.filterKey) {
+                                    if(
+                                        $scope.tablestatus.select[index] &&
+                                        fetchFromObject(item, slct.filterKey) !== $scope.tablestatus.select[index]
+                                    ) {
+                                        isMatched = false;
+                                    }
+                                }
+                            });
+
+                            return isMatched;
+                        };
+
+                        var fetchFromObject = function fetchFromObject(obj, prop) {
+                            var result = obj;
+                            var nestedProperties = prop.split('.');
+
+                            _.forEach(nestedProperties, function(propName) {
+                                result = result[propName];
+                            });
+
+                            return result;
+                        };
 
                         var initializePagination = function initializePagination () {
+                            var itemsAmount = $scope.tablestatus.filteredData.length;
+
                             $scope.tablestatus.itemsPerPage = $scope.tableconfig.pagination.itemsPerPage;
-                            $scope.tablestatus.pages = Math.ceil(($filter('filter')($scope.tablesource, $scope.tableconfig.filter)).length / $scope.tablestatus.itemsPerPage);
+
+                            if($scope.tableconfig.pagination.async) {
+                                itemsAmount = $scope.tableconfig.pagination.itemsLength;
+                            }
+
+                            $scope.tablestatus.pages = Math.ceil(itemsAmount / $scope.tablestatus.itemsPerPage);
+                        };
+
+                        var requestNewData = function requestNewData(page) {
+                            if(!($scope.tableconfig.pagination && $scope.tableconfig.pagination.async && $scope.onPageChange)) {
+                                return;
+                            }
+
+                            var requestObj = {
+                                page: page,
+                                start: null,
+                                end: null
+                            };
+
+                            requestObj.start = ($scope.tablestatus.itemsPerPage -1) * page;
+                            requestObj.end = requestObj.start + ($scope.tablestatus.itemsPerPage -1);
+
+                            $scope.onPageChange(requestObj);
                         };
 
                         var initialize = function initialize() {
-                            $scope.tablesource = $scope.$parent.$eval(attr.source);
-                            $scope.tableconfig = $scope.$parent.$eval(attr.config);
-                            $scope.tableconfig.filter = $scope.tableconfig.filter || {}
+                            // $scope.tablesource = $scope.$parent.$eval(attr.source);
+                            // $scope.tableconfig = $scope.$parent.$eval(attr.config);
+                            // $scope.onPageChange = $scope.$parent.$eval(attr.onPageChange);
+
+                            $scope.tableconfig.filter = $scope.tableconfig.filter || {};
                             $scope.rowIdentifier = attr.rowIdentifier;
                             //set the default sorting
                             _.forEach($scope.tableconfig.columns, function(column) {
@@ -89,13 +151,21 @@
                             if ($scope.tableconfig.pagination) {
                                 initializePagination();
                             }
-                        }
+                        };
 
                         $scope.$on('setTablePage', function (config, p) {
                             $scope.setPage(parseInt(p));
                         });
 
-                        $scope.$watch('tablesource.length', function (nv, ov) {
+                        $scope.$watch('currentPage', function(nv, ov) {
+                            if (nv !== ov && nv < $scope.tablestatus.pages) {
+                                $scope.tablestatus.activePage = nv;
+
+                                requestNewData(nv);
+                            }
+                        });
+
+                        $scope.$watchGroup(['tablestatus.filteredData.length', 'tableconfig.pagination.itemsLength'], function (nv, ov) {
                             if ($scope.tableconfig.pagination) {
                                 initializePagination();
                             }
@@ -125,13 +195,13 @@
                                 var opath = path,
                                     obj = path.split('.');
                                 obj = baseObj[obj[0]];
-                                for (var i=1, path=path.split('.'), len=path.length; i<len; i++){
+                                for (var i=1, path=path.split('.'), len=path.length; i<len; i++) {
                                     if (obj === null) {
                                         console.warn('%s could not be found in your source object', opath, baseObj);
                                         return;
-                                    };
+                                    }
                                     obj = obj[path[i]];
-                                };
+                                }
                                 return obj;
                             },
                             byStringV2 = function(baseObj, path, filter){
