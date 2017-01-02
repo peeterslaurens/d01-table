@@ -21,14 +21,15 @@
 
                         $scope.tablestatus = {
                             query: '',
-                            select: '',
+                            select: [],
                             pages: 0,
                             activePage: 0,
                             itemsPerPage: 0,
                             sorting: {
                                 direction: '-',
                                 column: ''
-                            }
+                            },
+                            filteredData: []
                         };
 
                         $scope.clickHeader = function clickHeader(col) {
@@ -51,7 +52,7 @@
 
                         $scope.setPage = function setPage(page) {
                             $scope.tablestatus.activePage = page;
-                        }
+                        };
 
                         $scope.getStartItem = function getStartItem() {
                             if ($scope.tableconfig.pagination) {
@@ -59,7 +60,7 @@
                             } else {
                                 return 0;
                             }
-                        }
+                        };
 
                         $scope.getEnditem = function getEnditem() {
                             if ($scope.tableconfig.pagination) {
@@ -67,17 +68,45 @@
                             } else {
                                 return 10000;
                             }
-                        }
+                        };
+
+                        $scope.selectFilter = function selectFilter(item) {
+                            var isMatched = true;
+
+                            _.forEach($scope.tableconfig.selects, function(slct, index) {
+                                if(slct.filterKey) {
+                                    if(
+                                        $scope.tablestatus.select[index] &&
+                                        fetchFromObject(item, slct.filterKey) !== $scope.tablestatus.select[index]
+                                    ) {
+                                        isMatched = false;
+                                    }
+                                }
+                            });
+
+                            return isMatched;
+                        };
+                        
+                        var fetchFromObject = function fetchFromObject(obj, prop) {
+                            var result = obj;
+                            var nestedProperties = prop.split('.');
+
+                            _.forEach(nestedProperties, function(propName) {
+                                result = result[propName];
+                            });
+
+                            return result;
+                        };
 
                         var initializePagination = function initializePagination () {
                             $scope.tablestatus.itemsPerPage = $scope.tableconfig.pagination.itemsPerPage;
-                            $scope.tablestatus.pages = Math.ceil(($filter('filter')($scope.tablesource, $scope.tableconfig.filter)).length / $scope.tablestatus.itemsPerPage);
+                            $scope.tablestatus.pages = Math.ceil($scope.tablestatus.filteredData.length / $scope.tablestatus.itemsPerPage);
                         };
 
                         var initialize = function initialize() {
                             $scope.tablesource = $scope.$parent.$eval(attr.source);
                             $scope.tableconfig = $scope.$parent.$eval(attr.config);
-                            $scope.tableconfig.filter = $scope.tableconfig.filter || {}
+                            $scope.tableconfig.filter = $scope.tableconfig.filter || {};
                             $scope.rowIdentifier = attr.rowIdentifier;
                             //set the default sorting
                             _.forEach($scope.tableconfig.columns, function(column) {
@@ -89,13 +118,13 @@
                             if ($scope.tableconfig.pagination) {
                                 initializePagination();
                             }
-                        }
+                        };
 
                         $scope.$on('setTablePage', function (config, p) {
                             $scope.setPage(parseInt(p));
                         });
 
-                        $scope.$watch('tablesource.length', function (nv, ov) {
+                        $scope.$watch('tablestatus.filteredData.length', function (nv, ov) {
                             if ($scope.tableconfig.pagination) {
                                 initializePagination();
                             }
