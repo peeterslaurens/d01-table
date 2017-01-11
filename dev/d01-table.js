@@ -135,12 +135,11 @@
                         };
 
                         var initialize = function initialize() {
-                            // $scope.tablesource = $scope.$parent.$eval(attr.source);
-                            // $scope.tableconfig = $scope.$parent.$eval(attr.config);
-                            // $scope.onPageChange = $scope.$parent.$eval(attr.onPageChange);
+                            $scope.parent = $scope.$parent;
 
                             $scope.tableconfig.filter = $scope.tableconfig.filter || {};
                             $scope.rowIdentifier = attr.rowIdentifier;
+
                             //set the default sorting
                             _.forEach($scope.tableconfig.columns, function(column) {
                                 if (column.defaultSort) {
