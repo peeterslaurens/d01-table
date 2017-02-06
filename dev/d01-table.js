@@ -144,6 +144,7 @@
                             _.forEach($scope.tableconfig.columns, function(column) {
                                 if (column.defaultSort) {
                                     $scope.tablestatus.sorting.column = column.key;
+                                    $scope.tablestatus.sorting.direction = typeof column.defaultSort === 'string' ? column.defaultSort || '-' : $scope.tablestatus.sorting.direction;
                                 }
                             });
 
