@@ -40,7 +40,8 @@
 
                         $scope.clickHeader = function clickHeader(col) {
                             if (col.sortable) {
-                                var sort = $scope.tablestatus.sorting;
+                                var sort = angular.copy($scope.tablestatus.sorting); //copy this by value, so we can update the scope AFTER we have passed the result back to the parent
+
                                 if (sort.column === col.key) {
                                     sort.direction = (sort.direction === '-') ? '+' : '-';
                                 } else {
@@ -51,6 +52,8 @@
                                 if($scope.onHeaderClick){ //only bubble the event if it is actually passed to our directive
                                     $scope.onHeaderClick(sort);
                                 }
+
+                                $scope.tablestatus.sorting = sort;
                             }
                         };
 
