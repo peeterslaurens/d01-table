@@ -47,7 +47,10 @@
                                     sort.column = col.key;
                                     sort.direction = '+';
                                 }
-                                $scope.onHeaderClick(sort);
+
+                                if($scope.onHeaderClick){ //only bubble the event if it is actually passed to our directive
+                                    $scope.onHeaderClick(sort);
+                                }
                             }
                         };
 
