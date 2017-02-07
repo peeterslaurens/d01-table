@@ -20,6 +20,7 @@
                         tablesource: '=source',
                         tableconfig: '=config',
                         onPageChange: '=',
+                        onHeaderClick: '=',
                         currentPage: '='
                     },
                     link: function($scope, $el, attr) {
@@ -46,6 +47,7 @@
                                     sort.column = col.key;
                                     sort.direction = '+';
                                 }
+                                $scope.onHeaderClick(sort);
                             }
                         };
 
