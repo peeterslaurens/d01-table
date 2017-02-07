@@ -39,14 +39,14 @@
 
                         $scope.clickHeader = function clickHeader(col) {
                             if (col.sortable) {
-                                var sort = $scope.tablestatus.sorting;
-
+                                var sort = angular.copy($scope.tablestatus.sorting);
                                 if (sort.column === col.key) {
                                     sort.direction = (sort.direction === '-') ? '+' : '-';
                                 } else {
                                     sort.column = col.key;
                                     sort.direction = '+';
                                 }
+                                $scope.tablestatus.sorting = sort;
                             }
                         };
 
@@ -124,14 +124,14 @@
                             }
 
                             var requestObj = {
-                                page: $scope.currentPage,
+                                page: $scope.tablestatus.activePage,
                                 start: null,
                                 end: null,
                                 sorting: $scope.tablestatus.sorting
                             };
 
-                            requestObj.start = ($scope.tablestatus.itemsPerPage -1) * $scope.currentPage;
-                            requestObj.end = requestObj.start + ($scope.tablestatus.itemsPerPage -1);
+                            requestObj.start = ($scope.tablestatus.itemsPerPage - 1) * $scope.tablestatus.activePage;
+                            requestObj.end = requestObj.start + ($scope.tablestatus.itemsPerPage - 1);
 
                             $scope.onChange(requestObj);
                         };
@@ -166,7 +166,7 @@
                             }
                         });
 
-                        $scope.$watch('tableStatus.sorting', function(nv, ov) {
+                        $scope.$watch('tablestatus.sorting', function(nv, ov) {
                             if (nv !== ov) {
                                 requestNewData();
                             }
