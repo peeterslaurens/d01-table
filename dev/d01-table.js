@@ -50,10 +50,12 @@
                                 }
 
                                 if($scope.onHeaderClick){ //only bubble the event if it is actually passed to our directive
-                                    $scope.onHeaderClick(sort);
-                                }
+                                    var applySort = $scope.onHeaderClick(sort);
+                                    if(applySort){ // if applySort gets returned as false, it means that the parent will handle sorting
+                                        $scope.tablestatus.sorting = sort;
+                                    }
+                                } else $scope.tablestatus.sorting = sort; // let the directive handle the sorting
 
-                                $scope.tablestatus.sorting = sort;
                             }
                         };
 
