@@ -19,7 +19,7 @@
                     scope: {
                         tablesource: '=source',
                         tableconfig: '=config',
-                        onPageChange: '=',
+                        onChange: '=',
                         currentPage: '='
                     },
                     link: function($scope, $el, attr) {
@@ -39,13 +39,14 @@
 
                         $scope.clickHeader = function clickHeader(col) {
                             if (col.sortable) {
-                                var sort = $scope.tablestatus.sorting;
+                                var sort = angular.copy($scope.tablestatus.sorting);
                                 if (sort.column === col.key) {
                                     sort.direction = (sort.direction === '-') ? '+' : '-';
                                 } else {
                                     sort.column = col.key;
                                     sort.direction = '+';
                                 }
+                                $scope.tablestatus.sorting = sort;
                             }
                         };
 
@@ -117,21 +118,22 @@
                             $scope.tablestatus.pages = Math.ceil(itemsAmount / $scope.tablestatus.itemsPerPage);
                         };
 
-                        var requestNewData = function requestNewData(page) {
-                            if(!($scope.tableconfig.pagination && $scope.tableconfig.pagination.async && $scope.onPageChange)) {
+                        var requestNewData = function requestNewData() {
+                            if(!($scope.tableconfig.pagination && $scope.tableconfig.pagination.async && $scope.onChange)) {
                                 return;
                             }
 
                             var requestObj = {
-                                page: page,
+                                page: $scope.tablestatus.activePage,
                                 start: null,
-                                end: null
+                                end: null,
+                                sorting: $scope.tablestatus.sorting
                             };
 
-                            requestObj.start = ($scope.tablestatus.itemsPerPage -1) * page;
-                            requestObj.end = requestObj.start + ($scope.tablestatus.itemsPerPage -1);
+                            requestObj.start = ($scope.tablestatus.itemsPerPage - 1) * $scope.tablestatus.activePage;
+                            requestObj.end = requestObj.start + ($scope.tablestatus.itemsPerPage - 1);
 
-                            $scope.onPageChange(requestObj);
+                            $scope.onChange(requestObj);
                         };
 
                         var initialize = function initialize() {
@@ -160,8 +162,13 @@
                         $scope.$watch('currentPage', function(nv, ov) {
                             if (nv !== ov && nv < $scope.tablestatus.pages) {
                                 $scope.tablestatus.activePage = nv;
+                                requestNewData();
+                            }
+                        });
 
-                                requestNewData(nv);
+                        $scope.$watch('tablestatus.sorting', function(nv, ov) {
+                            if (nv !== ov) {
+                                requestNewData();
                             }
                         });
 
