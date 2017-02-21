@@ -53,9 +53,6 @@
 </table>
 <ul class="pagination" ng-if="tablestatus.pages > 1">
     <li>
-        <a class="fa fa-angle-double-left" ng-click="firstPage()"></a>
-    </li>
-    <li>
         <a class="fa fa-angle-left" ng-click="prevPage()"></a>
     </li>
     <li ng-if="tablestatus.activePage > 4">
@@ -75,8 +72,5 @@
     </li>
     <li>
         <a class="fa fa-angle-right" ng-click="nextPage()"></a>
-    </li>
-    <li>
-        <a class="fa fa-angle-double-right" ng-click="lastPage()"></a>
     </li>
 </ul>
