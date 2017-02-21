@@ -52,7 +52,31 @@
     </tbody>
 </table>
 <ul class="pagination" ng-if="tablestatus.pages > 1">
-    <li ng-repeat="page in pages() track by $index">
+    <li>
+        <a class="fa fa-angle-double-left" ng-click="firstPage()"></a>
+    </li>
+    <li>
+        <a class="fa fa-angle-left" ng-click="prevPage()"></a>
+    </li>
+    <li ng-if="tablestatus.activePage > 4">
+        <a ng-click="firstPage()">1</a>
+    </li>
+    <li ng-if="tablestatus.activePage > 4">
+        <a ng-click="setPage(tablestatus.activePage - 5)">...</a>
+    </li>
+    <li ng-repeat="page in pages() track by $index" ng-if="($index >= (tablestatus.activePage - 4) && $index <= (tablestatus.activePage + 4))">
         <a ng-class="{'active': $index == tablestatus.activePage}" ng-click="setPage($index)">{{$index + 1}}</a>
+    </li>
+    <li ng-if="tablestatus.activePage < pages().length - 5 && pages().length > 10">
+        <a ng-click="setPage(tablestatus.activePage + 5)">...</a>
+    </li>
+    <li ng-if="tablestatus.activePage < pages().length - 5 && pages().length > 10">
+        <a ng-click="lastPage()">{{pages().length}}</a>
+    </li>
+    <li>
+        <a class="fa fa-angle-right" ng-click="nextPage()"></a>
+    </li>
+    <li>
+        <a class="fa fa-angle-double-right" ng-click="lastPage()"></a>
     </li>
 </ul>
