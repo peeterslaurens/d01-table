@@ -50,9 +50,7 @@
                             }
                         };
 
-
-                        //PAGINATION
-                        $scope.pages = function pages() {
+                        $scope.pages = function pages(){
                             return new Array($scope.tablestatus.pages);
                         };
 
@@ -60,6 +58,34 @@
                             $scope.tablestatus.activePage = page;
 
                             requestNewData(page);
+                        };
+
+                        $scope.prevPage = function prevPage() {
+                            if($scope.tablestatus.activePage > 0){
+                                $scope.tablestatus.activePage--;
+                                requestNewData($scope.tablestatus.activePage);
+                            }
+                        };
+
+                        $scope.nextPage = function nextPage(){
+                            if($scope.tablestatus.activePage < $scope.tablestatus.pages - 1){
+                                $scope.tablestatus.activePage++;
+                                requestNewData($scope.tablestatus.activePage);
+                            }
+                        };
+
+                        $scope.firstPage = function firstPage(){
+                            if($scope.tablestatus.activePage > 0){
+                                $scope.tablestatus.activePage = 0;
+                                requestNewData($scope.tablestatus.activePage);
+                            }
+                        };
+
+                        $scope.lastPage = function lastPage() {
+                            if($scope.tablestatus.activePage < $scope.tablestatus.pages - 1){
+                                $scope.tablestatus.activePage = $scope.tablestatus.pages - 1;
+                                requestNewData($scope.tablestatus.activePage);
+                            }
                         };
 
                         $scope.getStartItem = function getStartItem() {
