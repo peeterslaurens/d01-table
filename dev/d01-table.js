@@ -19,7 +19,7 @@
                     scope: {
                         tablesource: '=source',
                         tableconfig: '=config',
-                        onPageChange: '=',
+                        onChange: '=',
                         currentPage: '='
                     },
                     link: function($scope, $el, attr) {
@@ -39,19 +39,18 @@
 
                         $scope.clickHeader = function clickHeader(col) {
                             if (col.sortable) {
-                                var sort = $scope.tablestatus.sorting;
+                                var sort = angular.copy($scope.tablestatus.sorting);
                                 if (sort.column === col.key) {
                                     sort.direction = (sort.direction === '-') ? '+' : '-';
                                 } else {
                                     sort.column = col.key;
                                     sort.direction = '+';
                                 }
+                                $scope.tablestatus.sorting = sort;
                             }
                         };
 
-
-                        //PAGINATION
-                        $scope.pages = function pages() {
+                        $scope.pages = function pages(){
                             return new Array($scope.tablestatus.pages);
                         };
 
@@ -59,6 +58,34 @@
                             $scope.tablestatus.activePage = page;
 
                             requestNewData(page);
+                        };
+
+                        $scope.prevPage = function prevPage() {
+                            if($scope.tablestatus.activePage > 0){
+                                $scope.tablestatus.activePage--;
+                                requestNewData($scope.tablestatus.activePage);
+                            }
+                        };
+
+                        $scope.nextPage = function nextPage(){
+                            if($scope.tablestatus.activePage < $scope.tablestatus.pages - 1){
+                                $scope.tablestatus.activePage++;
+                                requestNewData($scope.tablestatus.activePage);
+                            }
+                        };
+
+                        $scope.firstPage = function firstPage(){
+                            if($scope.tablestatus.activePage > 0){
+                                $scope.tablestatus.activePage = 0;
+                                requestNewData($scope.tablestatus.activePage);
+                            }
+                        };
+
+                        $scope.lastPage = function lastPage() {
+                            if($scope.tablestatus.activePage < $scope.tablestatus.pages - 1){
+                                $scope.tablestatus.activePage = $scope.tablestatus.pages - 1;
+                                requestNewData($scope.tablestatus.activePage);
+                            }
                         };
 
                         $scope.getStartItem = function getStartItem() {
@@ -117,34 +144,35 @@
                             $scope.tablestatus.pages = Math.ceil(itemsAmount / $scope.tablestatus.itemsPerPage);
                         };
 
-                        var requestNewData = function requestNewData(page) {
-                            if(!($scope.tableconfig.pagination && $scope.tableconfig.pagination.async && $scope.onPageChange)) {
+                        var requestNewData = function requestNewData() {
+                            if(!($scope.tableconfig.pagination && $scope.tableconfig.pagination.async && $scope.onChange)) {
                                 return;
                             }
 
                             var requestObj = {
-                                page: page,
+                                page: $scope.tablestatus.activePage,
                                 start: null,
-                                end: null
+                                end: null,
+                                sorting: $scope.tablestatus.sorting
                             };
 
-                            requestObj.start = ($scope.tablestatus.itemsPerPage -1) * page;
-                            requestObj.end = requestObj.start + ($scope.tablestatus.itemsPerPage -1);
+                            requestObj.start = ($scope.tablestatus.itemsPerPage - 1) * $scope.tablestatus.activePage;
+                            requestObj.end = requestObj.start + ($scope.tablestatus.itemsPerPage - 1);
 
-                            $scope.onPageChange(requestObj);
+                            $scope.onChange(requestObj);
                         };
 
                         var initialize = function initialize() {
-                            // $scope.tablesource = $scope.$parent.$eval(attr.source);
-                            // $scope.tableconfig = $scope.$parent.$eval(attr.config);
-                            // $scope.onPageChange = $scope.$parent.$eval(attr.onPageChange);
+                            $scope.parent = $scope.$parent;
 
                             $scope.tableconfig.filter = $scope.tableconfig.filter || {};
                             $scope.rowIdentifier = attr.rowIdentifier;
+
                             //set the default sorting
                             _.forEach($scope.tableconfig.columns, function(column) {
                                 if (column.defaultSort) {
                                     $scope.tablestatus.sorting.column = column.key;
+                                    $scope.tablestatus.sorting.direction = typeof column.defaultSort === 'string' ? column.defaultSort || '-' : $scope.tablestatus.sorting.direction;
                                 }
                             });
 
@@ -160,8 +188,13 @@
                         $scope.$watch('currentPage', function(nv, ov) {
                             if (nv !== ov && nv < $scope.tablestatus.pages) {
                                 $scope.tablestatus.activePage = nv;
+                                requestNewData();
+                            }
+                        });
 
-                                requestNewData(nv);
+                        $scope.$watch('tablestatus.sorting', function(nv, ov) {
+                            if (nv !== ov) {
+                                requestNewData();
                             }
                         });
 
